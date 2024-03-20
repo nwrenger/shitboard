@@ -28,7 +28,9 @@
 			method: 'GET'
 		});
 		if (response.ok) {
-			resources = await response.json();
+			resources = (await response.json()).sort(
+				(a: Resource, b: Resource) => b.time_stamp - a.time_stamp
+			);
 		} else {
 			const t: ToastSettings = {
 				message: await response.text(),
