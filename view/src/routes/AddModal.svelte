@@ -17,6 +17,7 @@
 
 	const modalStore = getModalStore();
 	const toastStore = getToastStore();
+	const maxSize = 2_000_000;
 
 	// Base Classes
 	const cBase = 'card p-4 w-modal shadow-xl space-y-4';
@@ -29,15 +30,20 @@
 	let audio_data: Uint8Array;
 	let picture_data: Uint8Array;
 
-	async function add() {
+	function encodedData(title: string, audio_data: Uint8Array, picture_data: Uint8Array): string {
 		const audioDataEncoded = bufferToBase64(audio_data);
 		const pictureDataEncoded = bufferToBase64(picture_data);
+
+		return JSON.stringify({
+			title,
+			audio_data: audioDataEncoded,
+			picture_data: pictureDataEncoded
+		});
+	}
+
+	async function add() {
 		try {
-			let body = JSON.stringify({
-				title,
-				audio_data: audioDataEncoded,
-				picture_data: pictureDataEncoded
-			});
+			let body = encodedData(title, audio_data, picture_data);
 			let response = await fetch('/api/resource', {
 				method: 'POST',
 				body,
@@ -130,18 +136,20 @@
 			/>
 		</label>
 
-		<p class="text-error-500 italic text-center">
-			Please Note that the combined file sizes cannot be greater than 2 MB
-		</p>
+		{#if encodedData(title, audio_data, picture_data).length > maxSize}
+			<p class="text-error-500 italic text-center">
+				Please Note that the combined file sizes cannot be greater than {maxSize / 1_000_000} MB!
+			</p>
+		{/if}
 
 		<!-- prettier-ignore -->
 		<footer class="modal-footer {parent.regionFooter}">
         <button class="btn {parent.buttonNeutral}" on:click={parent.onClose}>Close</button>
-        <button class="btn {parent.buttonPositive}" use:popup={popupHover} on:click={async () => response = add()} disabled={!(title && audio_data && picture_data)}><Spinner {response} /> Add</button>
+        <button class="btn {parent.buttonPositive}" use:popup={popupHover} on:click={async () => response = add()} disabled={!(title && audio_data && picture_data && encodedData(title, audio_data, picture_data).length < maxSize)}><Spinner {response} /> Add</button>
 
-		<div class="card p-4 variant-filled-error" data-popup="popupHover-add">
+		<div class="card p-4 variant-filled-warning" data-popup="popupHover-add">
 			<p>Everything you'll add stays here forever!</p>
-			<div class="arrow variant-filled-error" />
+			<div class="arrow variant-filled-warning" />
 		</div>
     </footer>
 	</div>
