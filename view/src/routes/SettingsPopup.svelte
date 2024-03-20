@@ -5,8 +5,21 @@
 
 <div class="space-y-2">
 	<div>
-		<p class="font-bold">shitboard</p>
-		<p class="opacity-50">@nwrenger</p>
+		<div>
+			<span class="font-bold"> shitboard </span>
+			<a
+				class="anchor"
+				href="https://github.com/nwrenger/shitboard"
+				target="_blank"
+				title="Repository"><i class="fa-solid fa-up-right-from-square" /></a
+			>
+		</div>
+		<div>
+			<span class="opacity-50">@nwrenger</span>
+			<a class="anchor" href="https://github.com/nwrenger/shitboard" target="_blank" title="Profile"
+				><i class="fa-solid fa-up-right-from-square" /></a
+			>
+		</div>
 	</div>
 	<Accordion>
 		<AccordionItem>
