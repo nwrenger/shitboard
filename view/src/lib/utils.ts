@@ -7,7 +7,3 @@ export function bufferToBase64(buffer: ArrayBuffer): string {
 	}
 	return window.btoa(binary);
 }
-
-export function base64ToBuffer(base64: string): Buffer {
-	return Buffer.from(base64, 'base64');
-}

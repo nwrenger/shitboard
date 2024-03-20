@@ -7,22 +7,48 @@
 		type ToastSettings,
 		getToastStore
 	} from '@skeletonlabs/skeleton';
-	import type { PageData } from './$types';
 	import { audio_interface } from '$lib/stores';
+	import { onMount } from 'svelte';
+
+	interface Resource {
+		title: string;
+		audio_file: string;
+		picture_file: string;
+		time_stamp: number;
+	}
 
 	const toastStore = getToastStore();
 	const modalStore = getModalStore();
 
-	interface HTMLAudioElement {
-		setSinkId?(sinkId: string): Promise<void>;
-	}
+	let resources: Resource[] = [];
 
-	export let data: PageData;
+	// get initial data
+	onMount(async () => {
+		let response = await fetch('/api/resource', {
+			method: 'GET'
+		});
+		if (response.ok) {
+			resources = await response.json();
+		} else {
+			const t: ToastSettings = {
+				message: await response.text(),
+				background: 'variant-filled-error'
+			};
+			toastStore.trigger(t);
+		}
+	});
 
 	function create() {
 		const modal: ModalSettings = {
 			type: 'component',
-			component: 'addModal'
+			component: 'addModal',
+			// response
+			response: (r: Resource | undefined) => {
+				if (r) {
+					resources.push(r);
+					resources = resources;
+				}
+			}
 		};
 
 		modalStore.trigger(modal);
@@ -69,13 +95,13 @@
 				<p>Add here new Sounds!</p>
 				<div class="arrow variant-filled-primary" />
 			</div>
-			{#each data.resources as resource, i}
+			{#each resources as resource, i}
 				<button
 					class="btn variant-filled p-2 rounded-md max-w-16 [&>*]:pointer-events-none"
-					on:click={() => playAudio('files/' + resource.audio_file)}
+					on:click={() => playAudio(resource.audio_file)}
 					use:popup={{ ...popupHover, target: 'popupHover-' + i }}
 					><img
-						src={'files/' + resource.picture_file}
+						src={resource.picture_file}
 						alt={resource.title.slice(0, 2)}
 						class="rounded-sm aspect-square"
 					/></button

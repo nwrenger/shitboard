@@ -10,9 +10,6 @@
 	import { getToastStore } from '@skeletonlabs/skeleton';
 	import Spinner from '$lib/Spinner.svelte';
 	import { bufferToBase64 } from '$lib/utils';
-	import type { ActionResult } from '@sveltejs/kit';
-	import { applyAction, deserialize } from '$app/forms';
-	import { invalidateAll } from '$app/navigation';
 
 	// Props
 	/** Exposes parent props to this component. */
@@ -35,29 +32,33 @@
 	async function add() {
 		const audioDataEncoded = bufferToBase64(audio_data);
 		const pictureDataEncoded = bufferToBase64(picture_data);
-		let response = await fetch('?/add', {
-			method: 'POST',
-			body: JSON.stringify({
+		try {
+			let body = JSON.stringify({
 				title,
 				audio_data: audioDataEncoded,
 				picture_data: pictureDataEncoded
-			}),
-			headers: {
-				'x-sveltekit-action': 'true',
-				'Content-Length': '999999999999999',
-				'content-length': '999999999999999'
+			});
+			let response = await fetch('/api/resource', {
+				method: 'POST',
+				body,
+				headers: {
+					'Content-Type': 'application/json'
+				}
+			});
+			if (response.ok) {
+				let data = await response.json();
+				if ($modalStore[0].response) $modalStore[0].response(data);
+				modalStore.close();
+			} else {
+				const t: ToastSettings = {
+					message: await response.text(),
+					background: 'variant-filled-error'
+				};
+				toastStore.trigger(t);
 			}
-		});
-		if (response.ok) {
-			const result: ActionResult = deserialize(await response.text());
-			if (result.type === 'success') {
-				await invalidateAll();
-			}
-			applyAction(result);
-			modalStore.close();
-		} else {
+		} catch (e) {
 			const t: ToastSettings = {
-				message: (await response.json()).error.message,
+				message: e as string,
 				background: 'variant-filled-error'
 			};
 			toastStore.trigger(t);
@@ -128,6 +129,10 @@
 				on:change={() => readFile(files_picture).then((data) => (picture_data = data))}
 			/>
 		</label>
+
+		<p class="text-error-500 italic text-center">
+			Please Note that the combined file sizes cannot be greater than 2 MB
+		</p>
 
 		<!-- prettier-ignore -->
 		<footer class="modal-footer {parent.regionFooter}">
