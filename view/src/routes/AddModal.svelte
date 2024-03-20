@@ -30,7 +30,7 @@
 	let audio_data: Uint8Array;
 	let picture_data: Uint8Array;
 
-	function encodedData(title: string, audio_data: Uint8Array, picture_data: Uint8Array): string {
+	function encodedData(audio_data: Uint8Array, picture_data: Uint8Array): string {
 		const audioDataEncoded = bufferToBase64(audio_data);
 		const pictureDataEncoded = bufferToBase64(picture_data);
 
@@ -43,7 +43,7 @@
 
 	async function add() {
 		try {
-			let body = encodedData(title, audio_data, picture_data);
+			let body = encodedData(audio_data, picture_data);
 			let response = await fetch('/api/resource', {
 				method: 'POST',
 				body,
@@ -103,6 +103,8 @@
 		placement: 'top',
 		target: 'popupHover-add'
 	};
+
+	$: invalid = encodedData(audio_data, picture_data).length >= maxSize;
 </script>
 
 <!-- @component This is a Modal for adding a Resource. -->
@@ -119,7 +121,7 @@
 		<label class="label">
 			<span>Audio File</span>
 			<input
-				class="input"
+				class="input {invalid ? 'input-error' : ''}"
 				type="file"
 				bind:files={files_audio}
 				on:change={() => readFile(files_audio).then((data) => (audio_data = data))}
@@ -129,14 +131,14 @@
 		<label class="label">
 			<span>Picture</span>
 			<input
-				class="input"
+				class="input {invalid ? 'input-error' : ''}"
 				type="file"
 				bind:files={files_picture}
 				on:change={() => readFile(files_picture).then((data) => (picture_data = data))}
 			/>
 		</label>
 
-		{#if encodedData(title, audio_data, picture_data).length > maxSize}
+		{#if invalid}
 			<p class="text-error-500 italic text-center">
 				Please Note that the combined file sizes cannot be greater than {maxSize / 1_000_000} MB!
 			</p>
@@ -145,7 +147,7 @@
 		<!-- prettier-ignore -->
 		<footer class="modal-footer {parent.regionFooter}">
         <button class="btn {parent.buttonNeutral}" on:click={parent.onClose}>Close</button>
-        <button class="btn {parent.buttonPositive}" use:popup={popupHover} on:click={async () => response = add()} disabled={!(title && audio_data && picture_data && encodedData(title, audio_data, picture_data).length < maxSize)}><Spinner {response} /> Add</button>
+        <button class="btn {parent.buttonPositive}" use:popup={popupHover} on:click={async () => response = add()} disabled={!(title && audio_data && picture_data && !invalid)}><Spinner {response} /> Add</button>
 
 		<div class="card p-4 variant-filled-warning" data-popup="popupHover-add">
 			<p>Everything you'll add stays here forever!</p>
