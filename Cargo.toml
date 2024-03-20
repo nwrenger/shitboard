@@ -1,11 +1,15 @@
 [package]
-name = "shitboard-rs"
-description = "The Backend for the shitboard app"
+name = "shitboard"
+description = "The shitboard App"
 version = "0.1.0"
 edition = "2021"
 authors = ["nils@wrenger.net"]
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+[profile.release]
+lto = "thin"
+opt-level = 3
+codegen-units = 1
+strip = true
 
 [dependencies]
 axum = "0.7.4"
