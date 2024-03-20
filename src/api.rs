@@ -70,7 +70,6 @@ async fn add_resource(
     State(project): State<Project>,
     Json(files): Json<Files>,
 ) -> Result<Json<Resource>> {
-    let resource_path = project.resource_path.to_string_lossy();
     let audio_data = BASE64_STANDARD.decode(files.audio_data)?;
     let picture_data = BASE64_STANDARD.decode(files.picture_data)?;
 
@@ -81,15 +80,24 @@ async fn add_resource(
         return Err(Error::InvalidFileType);
     }
 
-    let audio_file = format!("{}{}.{}", resource_path, files.title, audio_ext);
-    let picture_file = format!("{}{}.{}", resource_path, files.title, picture_ext);
-    let json_file = format!("{}/{}.json", resource_path, files.title);
+    let audio_file = project
+        .resource_path
+        .join(&files.title)
+        .with_extension(&audio_ext);
+    let picture_file = project
+        .resource_path
+        .join(&files.title)
+        .with_extension(&picture_ext);
+    let json_file = project
+        .resource_path
+        .join(&files.title)
+        .with_extension("json");
 
     if !fs::try_exists(&json_file).await? {
         let resource = Resource {
-            title: files.title.clone(),
-            audio_file: audio_file.clone().into(),
-            picture_file: picture_file.clone().into(),
+            title: files.title,
+            audio_file: (&audio_file).into(),
+            picture_file: (&picture_file).into(),
             time_stamp: SystemTime::now()
                 .duration_since(UNIX_EPOCH)
                 .unwrap_or_default()

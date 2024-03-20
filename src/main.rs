@@ -15,6 +15,7 @@ use axum::{
     Router,
 };
 use clap::{arg, command, Parser};
+use tokio::fs;
 use tower::util::ServiceExt;
 use tower_http::services::ServeFile;
 
@@ -36,12 +37,33 @@ async fn main() {
         resources,
     } = Args::parse();
 
+    if !fs::try_exists(&assets).await.unwrap_or(false)
+        || !fs::try_exists(&resources).await.unwrap_or(false)
+    {
+        panic!("The configured Path doesn't exists, Please change them!");
+    }
+
     let project = Project::new(resources.clone());
+
+    let resource_route = &format!(
+        "/{}*file",
+        if resources
+            .to_string_lossy()
+            .chars()
+            .last()
+            .unwrap_or_default()
+            != '/'
+        {
+            resources.to_string_lossy() + "/"
+        } else {
+            resources.to_string_lossy()
+        }
+    );
 
     let app = Router::new()
         .nest("/api", api::routes(project))
         .route("/", get(static_index).with_state(assets.clone()))
-        .route("/files/*file", get(static_assets).with_state(resources))
+        .route(resource_route, get(static_assets).with_state(resources))
         .route("/*file", get(static_assets).with_state(assets));
 
     let listener = tokio::net::TcpListener::bind(host).await.unwrap();
