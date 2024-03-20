@@ -46,10 +46,7 @@
 			component: 'addModal',
 			// response
 			response: (r: Resource | undefined) => {
-				if (r) {
-					resources.push(r);
-					resources = resources;
-				}
+				if (r) resources = [r, ...resources];
 			}
 		};
 
