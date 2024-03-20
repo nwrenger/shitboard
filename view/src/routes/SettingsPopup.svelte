@@ -16,7 +16,7 @@
 		</div>
 		<div class="flex">
 			<span class="opacity-50 flex-auto">@nwrenger</span>
-			<a class="anchor" href="https://github.com/nwrenger/shitboard" target="_blank" title="Profile"
+			<a class="anchor" href="https://github.com/nwrenger" target="_blank" title="Profile"
 				><i class="fa-solid fa-up-right-from-square" /></a
 			>
 		</div>
