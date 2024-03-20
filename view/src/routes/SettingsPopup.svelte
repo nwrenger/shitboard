@@ -5,8 +5,8 @@
 
 <div class="space-y-2">
 	<div>
-		<div>
-			<span class="font-bold"> shitboard </span>
+		<div class="flex">
+			<span class="font-bold flex-auto">shitboard</span>
 			<a
 				class="anchor"
 				href="https://github.com/nwrenger/shitboard"
@@ -14,8 +14,8 @@
 				title="Repository"><i class="fa-solid fa-up-right-from-square" /></a
 			>
 		</div>
-		<div>
-			<span class="opacity-50">@nwrenger</span>
+		<div class="flex">
+			<span class="opacity-50 flex-auto">@nwrenger</span>
 			<a class="anchor" href="https://github.com/nwrenger/shitboard" target="_blank" title="Profile"
 				><i class="fa-solid fa-up-right-from-square" /></a
 			>
