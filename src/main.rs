@@ -23,7 +23,7 @@ use tower_http::services::ServeFile;
 #[command(author, version, about)]
 struct Args {
     host: SocketAddr,
-    #[arg(long, default_value = "view/build")]
+    #[arg(short, long, default_value = "view/build")]
     assets: PathBuf,
     #[arg(short, long, default_value = "files/")]
     resources: PathBuf,
