@@ -9,6 +9,7 @@
 	} from '@skeletonlabs/skeleton';
 	import { audio_interface } from '$lib/stores';
 	import { onMount } from 'svelte';
+	import { error_message } from '$lib/utils';
 
 	interface Resource {
 		title: string;
@@ -33,7 +34,7 @@
 			);
 		} else {
 			const t: ToastSettings = {
-				message: await response.text(),
+				message: error_message(await response.text()),
 				background: 'variant-filled-error'
 			};
 			toastStore.trigger(t);
@@ -82,7 +83,7 @@
 </svelte:head>
 
 <div class="container space-y-8 flex flex-col items-center !max-w-6xl mx-auto p-4">
-	<div class="grid sm:grid-cols-6 md:grid-cols-10 gap-4 grid-cols-5">
+	<div class="grid sm:grid-cols-8 md:grid-cols-12 gap-4 grid-cols-6 w-full">
 		<button
 			class="btn variant-filled-primary p-2 rounded-md max-w-16 [&>*]:pointer-events-none"
 			on:click={create}

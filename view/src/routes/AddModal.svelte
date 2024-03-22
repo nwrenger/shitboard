@@ -9,7 +9,7 @@
 	} from '@skeletonlabs/skeleton';
 	import { getToastStore } from '@skeletonlabs/skeleton';
 	import Spinner from '$lib/Spinner.svelte';
-	import { bufferToBase64 } from '$lib/utils';
+	import { bufferToBase64, error_message } from '$lib/utils';
 
 	// Props
 	/** Exposes parent props to this component. */
@@ -57,7 +57,7 @@
 				modalStore.close();
 			} else {
 				const t: ToastSettings = {
-					message: await response.text(),
+					message: error_message(await response.text()),
 					background: 'variant-filled-error'
 				};
 				toastStore.trigger(t);

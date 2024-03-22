@@ -7,3 +7,26 @@ export function bufferToBase64(buffer: ArrayBuffer): string {
 	}
 	return window.btoa(binary);
 }
+
+export function error_message(error: string): string {
+	switch (error) {
+		case 'Arguments':
+			return 'The user provided arguments are malformed';
+		case 'FileOpen':
+			return 'A file could not be found or opened';
+		case 'AlreadyExists':
+			return 'A file with that name already exists';
+		case 'InvalidFileType':
+			return 'An uploaded file has an invalid type';
+		case 'Network':
+			return 'Could not connect to server';
+		case 'InvalidFormat':
+			return 'Invalid file format';
+		case 'NothingFound':
+			return 'No matching results';
+		case 'Conversion':
+			return 'Conversion error, decoding, ...';
+		default:
+			return 'An unknown error has occurred.\nTry refreshing the page!';
+	}
+}

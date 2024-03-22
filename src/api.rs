@@ -110,7 +110,7 @@ async fn add_resource(
 
         Ok(Json(resource))
     } else {
-        Err(Error::FileAlreadyExists)
+        Err(Error::AlreadyExists)
     }
 }
 

@@ -14,27 +14,45 @@ use axum::{
     routing::get,
     Router,
 };
+use axum_server::tls_rustls::RustlsConfig;
 use clap::{arg, command, Parser};
 use tokio::fs;
 use tower::util::ServiceExt;
 use tower_http::services::ServeFile;
+use tracing::info;
+use tracing_subscriber::prelude::__tracing_subscriber_SubscriberExt;
+use tracing_subscriber::util::SubscriberInitExt;
+use tracing_subscriber::EnvFilter;
 
 #[derive(Parser)]
 #[command(author, version, about)]
 struct Args {
+    /// Ip and port for the webserver
     host: SocketAddr,
+    /// Directory for the static assets
     #[arg(short, long, default_value = "view/build")]
     assets: PathBuf,
-    #[arg(short, long, default_value = "files/")]
+    /// Path to where the files are getting saved
+    #[arg(short, long, default_value = "files")]
     resources: PathBuf,
+    /// Path to the TLS certificate
+    #[arg(long)]
+    cert: PathBuf,
+    /// Path to the TLS key
+    #[arg(long)]
+    key: PathBuf,
 }
 
 #[tokio::main]
 async fn main() {
+    logging();
+
     let Args {
         host,
         assets,
         resources,
+        cert,
+        key,
     } = Args::parse();
 
     if !fs::try_exists(&assets).await.unwrap_or(false)
@@ -60,14 +78,27 @@ async fn main() {
         }
     );
 
+    let config = RustlsConfig::from_pem_file(cert, key).await.unwrap();
     let app = Router::new()
         .nest("/api", api::routes(project))
         .route("/", get(static_index).with_state(assets.clone()))
         .route(resource_route, get(static_assets).with_state(resources))
         .route("/*file", get(static_assets).with_state(assets));
 
-    let listener = tokio::net::TcpListener::bind(host).await.unwrap();
-    axum::serve(listener, app).await.unwrap();
+    info!("Starting on {host}");
+
+    axum_server::bind_rustls(host, config)
+        .serve(app.into_make_service())
+        .await
+        .unwrap();
+}
+
+/// initialize tracing
+fn logging() {
+    tracing_subscriber::registry()
+        .with(EnvFilter::try_from_default_env().unwrap_or_else(|_| "info".into()))
+        .with(tracing_subscriber::fmt::layer())
+        .init();
 }
 
 async fn static_index(State(dir): State<PathBuf>, req: Request<Body>) -> Response {

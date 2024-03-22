@@ -17,8 +17,8 @@ pub enum Error {
     Arguments,
     /// A file could not be found or opened
     FileOpen,
-    /// A file already exists
-    FileAlreadyExists,
+    /// A file with that name already exists
+    AlreadyExists,
     /// An uploaded file has an invalid type
     InvalidFileType,
     /// Could not connect to server
@@ -27,7 +27,7 @@ pub enum Error {
     InvalidFormat,
     /// No matching results
     NothingFound,
-    /// Conversion error
+    /// Conversion error, decoding, ...
     Conversion,
 }
 
@@ -82,7 +82,7 @@ impl IntoResponse for Error {
             Error::Arguments
             | Error::InvalidFormat
             | Error::InvalidFileType
-            | Error::FileAlreadyExists
+            | Error::AlreadyExists
             | Error::Conversion => StatusCode::BAD_REQUEST,
             Error::FileOpen | Error::NothingFound => StatusCode::NOT_FOUND,
             Error::Network => StatusCode::SERVICE_UNAVAILABLE,
