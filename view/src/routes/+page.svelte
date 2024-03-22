@@ -81,35 +81,33 @@
 	/>
 </svelte:head>
 
-<div class="container h-full mx-auto flex justify-center items-center">
-	<div class="space-y-8 flex flex-col items-center lg:w-2/3 w-11/12 pb-6">
-		<div class="grid sm:grid-cols-6 md:grid-cols-10 gap-4 grid-cols-5">
-			<button
-				class="btn variant-filled-primary p-2 rounded-md max-w-16 [&>*]:pointer-events-none"
-				on:click={create}
-				use:popup={{ ...popupHover, target: 'popupHover-plus' }}
-				><i class="fa-solid fa-plus"></i></button
-			>
-			<div class="card p-4 variant-filled-primary" data-popup="popupHover-plus">
-				<p>Add here new Sounds!</p>
-				<div class="arrow variant-filled-primary" />
-			</div>
-			{#each resources as resource, i}
-				<button
-					class="btn variant-filled p-2 rounded-md max-w-16 [&>*]:pointer-events-none"
-					on:click={() => playAudio(resource.audio_file)}
-					use:popup={{ ...popupHover, target: 'popupHover-' + i }}
-					><img
-						src={resource.picture_file}
-						alt={resource.title.slice(0, 2)}
-						class="rounded-sm aspect-square"
-					/></button
-				>
-				<div class="card p-4 variant-filled" data-popup="popupHover-{i}">
-					<p>{resource.title}</p>
-					<div class="arrow variant-filled" />
-				</div>
-			{/each}
+<div class="container space-y-8 flex flex-col items-center !max-w-6xl mx-auto p-4">
+	<div class="grid sm:grid-cols-6 md:grid-cols-10 gap-4 grid-cols-5">
+		<button
+			class="btn variant-filled-primary p-2 rounded-md max-w-16 [&>*]:pointer-events-none"
+			on:click={create}
+			use:popup={{ ...popupHover, target: 'popupHover-plus' }}
+			><i class="fa-solid fa-plus"></i></button
+		>
+		<div class="card p-4 variant-filled-primary" data-popup="popupHover-plus">
+			<p>Add here new Sounds!</p>
+			<div class="arrow variant-filled-primary" />
 		</div>
+		{#each resources as resource, i}
+			<button
+				class="btn variant-filled p-2 rounded-md max-w-16 [&>*]:pointer-events-none"
+				on:click={() => playAudio(resource.audio_file)}
+				use:popup={{ ...popupHover, target: 'popupHover-' + i }}
+				><img
+					src={resource.picture_file}
+					alt={resource.title.slice(0, 2)}
+					class="rounded-sm aspect-square"
+				/></button
+			>
+			<div class="card p-4 variant-filled" data-popup="popupHover-{i}">
+				<p>{resource.title}</p>
+				<div class="arrow variant-filled" />
+			</div>
+		{/each}
 	</div>
 </div>
