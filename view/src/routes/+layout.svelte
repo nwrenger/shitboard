@@ -43,7 +43,7 @@
 		<!-- Page Container -->
 		<div class="page-container !max-w-6xl mx-auto grid grid-cols-[1fr_auto] items-center gap-4 p-4">
 			<button type="button" class="btn-icon" use:popup={popupShitboard} title="shitboard">
-				<img class="max-w-full rounded-sm aspect-square shadow-xl" src="./favicon.png" alt="shit" />
+				<img class="max-w-full rounded-sm aspect-square shadow-xl" src="/favicon.png" alt="shit" />
 			</button>
 
 			<div class="card p-4 w-72 shadow-xl z-[2]" data-popup="settingsContents">
