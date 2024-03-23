@@ -8,6 +8,10 @@ export function bufferToBase64(buffer: ArrayBuffer): string {
 	return window.btoa(binary);
 }
 
+export function clamp(value: number, min: number, max: number) {
+	return Math.min(Math.max(value, min), max);
+}
+
 export function error_message(error: string): string {
 	switch (error) {
 		case 'Arguments':

@@ -9,7 +9,7 @@
 	} from '@skeletonlabs/skeleton';
 	import { audio_interface } from '$lib/stores';
 	import { onMount } from 'svelte';
-	import { error_message } from '$lib/utils';
+	import { clamp, error_message } from '$lib/utils';
 
 	interface Resource {
 		title: string;
@@ -56,7 +56,10 @@
 
 	async function playAudio(path: string) {
 		const audio = new Audio(path);
-		audio.volume *= $audio_interface.volume;
+		audio.volume =
+			$audio_interface.volume !== 0
+				? clamp(0.01 * Math.exp(Math.log(1.0 / 0.01) * $audio_interface.volume), 0.01, 1.0)
+				: 0.0;
 		audio.play().catch((error) => {
 			const t: ToastSettings = {
 				message: 'Error playing audio: ' + error,

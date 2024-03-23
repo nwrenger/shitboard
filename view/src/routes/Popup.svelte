@@ -39,7 +39,13 @@
 			<svelte:fragment slot="content">
 				<label class="label">
 					<span>Volume</span>
-					<input type="range" max="1.0" step="0.01" bind:value={$audio_interface.volume} />
+					<input
+						type="range"
+						max="1.0"
+						min="0.0"
+						step="0.01"
+						bind:value={$audio_interface.volume}
+					/>
 				</label>
 			</svelte:fragment>
 		</AccordionItem>
