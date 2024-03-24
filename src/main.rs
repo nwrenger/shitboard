@@ -14,7 +14,6 @@ use axum::{
     routing::get,
     Router,
 };
-use axum_server::tls_rustls::RustlsConfig;
 use clap::{arg, command, Parser};
 use tokio::fs;
 use tower::util::ServiceExt;
@@ -35,12 +34,6 @@ struct Args {
     /// Path to where the files are getting saved
     #[arg(short, long, default_value = "files")]
     resources: PathBuf,
-    /// Path to the TLS certificate
-    #[arg(long)]
-    cert: PathBuf,
-    /// Path to the TLS key
-    #[arg(long)]
-    key: PathBuf,
 }
 
 #[tokio::main]
@@ -51,8 +44,6 @@ async fn main() {
         host,
         assets,
         resources,
-        cert,
-        key,
     } = Args::parse();
 
     if !fs::try_exists(&assets).await.unwrap_or(false)
@@ -78,7 +69,6 @@ async fn main() {
         }
     );
 
-    let config = RustlsConfig::from_pem_file(cert, key).await.unwrap();
     let app = Router::new()
         .nest("/api", api::routes(project))
         .route("/", get(static_index).with_state(assets.clone()))
@@ -87,10 +77,8 @@ async fn main() {
 
     info!("Starting on {host}");
 
-    axum_server::bind_rustls(host, config)
-        .serve(app.into_make_service())
-        .await
-        .unwrap();
+    let listener = tokio::net::TcpListener::bind(host).await.unwrap();
+    axum::serve(listener, app).await.unwrap();
 }
 
 /// initialize tracing
