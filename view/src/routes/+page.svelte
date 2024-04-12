@@ -10,6 +10,7 @@
 	import { audio_interface } from '$lib/stores';
 	import { onMount } from 'svelte';
 	import { clamp, error_message } from '$lib/utils';
+	import ImageLoader from './ImageLoader.svelte';
 
 	interface Resource {
 		title: string;
@@ -102,12 +103,14 @@
 				class="btn variant-filled p-2 rounded-md max-w-16 [&>*]:pointer-events-none"
 				on:click={() => playAudio(resource.audio_file)}
 				use:popup={{ ...popupHover, target: 'popupHover-' + i }}
-				><img
+			>
+				<ImageLoader
 					src={resource.picture_file}
 					alt={resource.title.slice(0, 2)}
-					class="rounded-sm aspect-square"
-				/></button
-			>
+					rounded="rounded-sm"
+					ratio="aspect-square"
+				/>
+			</button>
 			<div class="card p-4 variant-filled" data-popup="popupHover-{i}">
 				<p>{resource.title}</p>
 				<div class="arrow variant-filled" />
