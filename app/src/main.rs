@@ -2,7 +2,7 @@
 
 pub mod req;
 
-use std::{io::Cursor, thread};
+use std::{cmp::Ordering, io::Cursor, thread};
 
 use bytes::Bytes;
 use eframe::egui;
@@ -10,6 +10,7 @@ use req::{Files, Resource};
 use reqwest::{Client, Error};
 use rodio::{Decoder, OutputStream, Sink};
 use tokio::sync::mpsc::{self, Receiver, Sender};
+
 #[tokio::main]
 async fn main() -> Result<(), eframe::Error> {
     // logging
@@ -27,6 +28,7 @@ async fn main() -> Result<(), eframe::Error> {
                 match message {
                     SenderTypeServer::GetResources => {
                         let data = req::get_resources(&client).await?;
+                        // println!("{:?}", data);
                         tx.send(SenderTypeUi::Resources(data))
                             .await
                             .unwrap_or_default();
@@ -49,7 +51,7 @@ async fn main() -> Result<(), eframe::Error> {
             if let Err(err) = thread {
                 send_ui
                     .clone()
-                    .send(SenderTypeUi::Error(err))
+                    .send(SenderTypeUi::Error(err.without_url()))
                     .await
                     .unwrap_or_default();
             }
@@ -59,25 +61,29 @@ async fn main() -> Result<(), eframe::Error> {
     // getting initial data
     let tx = send_server.clone();
     tokio::spawn(async move {
-        tx.send(SenderTypeServer::GetResources).await.unwrap();
+        tx.send(SenderTypeServer::GetResources)
+            .await
+            .unwrap_or_default();
     });
 
     // start ui
     let options = eframe::NativeOptions {
-        viewport: egui::ViewportBuilder::default().with_inner_size([500.0, 400.0]),
+        viewport: egui::ViewportBuilder::default()
+            .with_inner_size([500.0, 400.0])
+            .with_min_inner_size([300.0, 200.0]),
         ..Default::default()
     };
     eframe::run_native(
         "shitboard",
         options,
-        Box::new(|cc| {
-            egui_extras::install_image_loaders(&cc.egui_ctx);
+        Box::new(|_| {
             Box::new(App {
                 selected_tab: AppTabs::Sounds,
                 resources: Vec::default(),
                 send_server,
                 rec_ui,
                 error_modal: None,
+                audio_settings: AudioSettings::default(),
             })
         }),
     )
@@ -91,6 +97,7 @@ struct App {
     rec_ui: Receiver<SenderTypeUi>,
     // error
     error_modal: Option<Error>,
+    audio_settings: AudioSettings,
 }
 
 #[derive(PartialEq, Clone)]
@@ -115,6 +122,17 @@ pub enum SenderTypeUi {
     Error(Error),
 }
 
+#[derive(Debug)]
+struct AudioSettings {
+    volume: f32,
+}
+
+impl Default for AudioSettings {
+    fn default() -> Self {
+        Self { volume: 1.0 }
+    }
+}
+
 impl eframe::App for App {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
         egui::TopBottomPanel::top("top").show(ctx, |ui| {
@@ -131,13 +149,24 @@ impl eframe::App for App {
                         SenderTypeUi::None => {}
                         SenderTypeUi::Resources(resources) => {
                             self.resources = resources;
+                            self.resources.sort_by(|a, b| {
+                                a.time_stamp
+                                    .partial_cmp(&b.time_stamp)
+                                    .unwrap_or(Ordering::Equal)
+                            });
+                            // make sure changes be visible
+                            ctx.request_repaint();
                         }
-                        // todo: this operation should be cached for performance reasons
+                        // todo: caching for performance
                         SenderTypeUi::File(bytes) => {
-                            play_audio(bytes);
+                            play_audio(bytes, self.audio_settings.volume);
+                            // make sure changes be visible
+                            ctx.request_repaint();
                         }
                         SenderTypeUi::Error(err) => {
                             self.error_modal = Some(err);
+                            // make sure changes be visible
+                            ctx.request_repaint();
                         }
                     };
 
@@ -164,6 +193,15 @@ impl eframe::App for App {
                             });
                     }
 
+                    if ui.button("Reload").clicked() {
+                        let tx = self.send_server.clone();
+                        tokio::spawn(async move {
+                            tx.send(SenderTypeServer::GetResources)
+                                .await
+                                .unwrap_or_default();
+                        });
+                    }
+
                     for resource in &self.resources {
                         if ui.button(&resource.title).clicked() {
                             let tx = self.send_server.clone();
@@ -171,23 +209,33 @@ impl eframe::App for App {
                             tokio::spawn(async move {
                                 tx.send(SenderTypeServer::DownloadFile(audio_file))
                                     .await
-                                    .unwrap();
+                                    .unwrap_or_default();
                             });
                         }
                     }
                 }
-                AppTabs::Settings => {}
+                AppTabs::Settings => {
+                    ui.label("Volume");
+                    ui.add(
+                        egui::Slider::new(&mut self.audio_settings.volume, 0.0..=1.0)
+                            .suffix("%")
+                            .trailing_fill(true)
+                            .handle_shape(egui::style::HandleShape::Rect { aspect_ratio: 0.5 }),
+                    );
+                }
             }
         });
     }
 }
 
 /// Plays the audio in a different thread from given bytes.
-fn play_audio(bytes: Bytes) {
+fn play_audio(bytes: Bytes, volume: f32) {
     // todo: error handling
-    thread::spawn(|| {
+    thread::spawn(move || {
         let (_stream, handle) = OutputStream::try_default().unwrap();
         let sink = Sink::try_new(&handle).unwrap();
+
+        sink.set_volume(volume);
 
         sink.append(Decoder::new(Cursor::new(bytes)).unwrap());
 
