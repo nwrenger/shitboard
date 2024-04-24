@@ -5,7 +5,7 @@ pub mod req;
 use std::{cmp::Ordering, io::Cursor, thread};
 
 use bytes::Bytes;
-use eframe::egui;
+use eframe::egui::{self};
 use req::{Files, Resource};
 use reqwest::{Client, Error};
 use rodio::{Decoder, OutputStream, Sink};
@@ -40,9 +40,11 @@ async fn main() -> Result<(), eframe::Error> {
                             .await
                             .unwrap_or_default();
                     }
-                    SenderTypeServer::DownloadFile(url) => {
+                    SenderTypeServer::DownloadAudio(url) => {
                         let bytes = req::download_file(&client, &url).await?;
-                        tx.send(SenderTypeUi::File(bytes)).await.unwrap_or_default();
+                        tx.send(SenderTypeUi::PlayAudio(bytes))
+                            .await
+                            .unwrap_or_default();
                     }
                 }
                 Ok::<(), reqwest::Error>(())
@@ -90,13 +92,16 @@ async fn main() -> Result<(), eframe::Error> {
 }
 
 struct App {
+    // tabs
     selected_tab: AppTabs,
+    // cached data
     resources: Vec<Resource>,
     // sender
     send_server: Sender<SenderTypeServer>,
     rec_ui: Receiver<SenderTypeUi>,
     // error
     error_modal: Option<Error>,
+    // settings
     audio_settings: AudioSettings,
 }
 
@@ -110,7 +115,7 @@ enum AppTabs {
 pub enum SenderTypeServer {
     GetResources,
     AddResource(Vec<Resource>, Files),
-    DownloadFile(String),
+    DownloadAudio(String),
 }
 
 #[derive(Debug, Default)]
@@ -118,18 +123,19 @@ pub enum SenderTypeUi {
     #[default]
     None,
     Resources(Vec<Resource>),
-    File(Bytes),
+    PlayAudio(Bytes),
     Error(Error),
 }
 
 #[derive(Debug)]
 struct AudioSettings {
+    /// From `100.0` to `0.0`, need to be divided by `100.0` for setting volume
     volume: f32,
 }
 
 impl Default for AudioSettings {
     fn default() -> Self {
-        Self { volume: 1.0 }
+        Self { volume: 100.0 }
     }
 }
 
@@ -137,7 +143,20 @@ impl eframe::App for App {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
         egui::TopBottomPanel::top("top").show(ctx, |ui| {
             ui.with_layout(egui::Layout::left_to_right(egui::Align::Center), |ui| {
-                ui.selectable_value(&mut self.selected_tab, AppTabs::Sounds, "Sounds");
+                if ui
+                    .selectable_value(&mut self.selected_tab, AppTabs::Sounds, "Sounds")
+                    .on_hover_ui(|ui| {
+                        ui.label("Reloads current data on press");
+                    })
+                    .clicked()
+                {
+                    let tx = self.send_server.clone();
+                    tokio::spawn(async move {
+                        tx.send(SenderTypeServer::GetResources)
+                            .await
+                            .unwrap_or_default();
+                    });
+                }
                 ui.selectable_value(&mut self.selected_tab, AppTabs::Settings, "Settings");
             });
         });
@@ -158,7 +177,7 @@ impl eframe::App for App {
                             ctx.request_repaint();
                         }
                         // todo: caching for performance
-                        SenderTypeUi::File(bytes) => {
+                        SenderTypeUi::PlayAudio(bytes) => {
                             play_audio(bytes, self.audio_settings.volume);
                             // make sure changes be visible
                             ctx.request_repaint();
@@ -193,31 +212,30 @@ impl eframe::App for App {
                             });
                     }
 
-                    if ui.button("Reload").clicked() {
-                        let tx = self.send_server.clone();
-                        tokio::spawn(async move {
-                            tx.send(SenderTypeServer::GetResources)
-                                .await
-                                .unwrap_or_default();
+                    ui.group(|ui| {
+                        ui.set_width(ui.available_width());
+                        ui.set_height(ui.available_height());
+                        ui.horizontal_wrapped(|ui| {
+                            for resource in &self.resources {
+                                if ui.button(&resource.title).clicked() {
+                                    let tx = self.send_server.clone();
+                                    let audio_file =
+                                        resource.audio_file.to_string_lossy().to_string();
+                                    tokio::spawn(async move {
+                                        tx.send(SenderTypeServer::DownloadAudio(audio_file))
+                                            .await
+                                            .unwrap_or_default();
+                                    });
+                                }
+                            }
                         });
-                    }
-
-                    for resource in &self.resources {
-                        if ui.button(&resource.title).clicked() {
-                            let tx = self.send_server.clone();
-                            let audio_file = resource.audio_file.to_string_lossy().to_string();
-                            tokio::spawn(async move {
-                                tx.send(SenderTypeServer::DownloadFile(audio_file))
-                                    .await
-                                    .unwrap_or_default();
-                            });
-                        }
-                    }
+                    });
                 }
                 AppTabs::Settings => {
                     ui.label("Volume");
                     ui.add(
-                        egui::Slider::new(&mut self.audio_settings.volume, 0.0..=1.0)
+                        egui::Slider::new(&mut self.audio_settings.volume, 0.0..=100.0)
+                            .max_decimals(2)
                             .suffix("%")
                             .trailing_fill(true)
                             .handle_shape(egui::style::HandleShape::Rect { aspect_ratio: 0.5 }),
@@ -235,7 +253,7 @@ fn play_audio(bytes: Bytes, volume: f32) {
         let (_stream, handle) = OutputStream::try_default().unwrap();
         let sink = Sink::try_new(&handle).unwrap();
 
-        sink.set_volume(volume);
+        sink.set_volume(volume / 100.0);
 
         sink.append(Decoder::new(Cursor::new(bytes)).unwrap());
 
