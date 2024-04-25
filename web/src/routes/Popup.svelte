@@ -21,10 +21,7 @@
 		</div>
 	</div>
 
-	<p>
-		A Chaos-Fueled Soundboard App where creativity and permanence collide. Unleash your sounds into
-		the wild with no take-backs. Upload anything; once it's up, it's there forever!
-	</p>
+	<p>A Chaos-Fueled Soundboard App.</p>
 	<label class="label">
 		<span>Volume</span>
 		<input type="range" max="1.0" min="0.0" step="0.01" bind:value={$audio_interface.volume} />
