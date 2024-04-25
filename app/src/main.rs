@@ -1,13 +1,16 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")] // hide console window on Windows in release
 
+pub mod error;
 pub mod req;
 
-use std::{cmp::Ordering, io::Cursor, thread};
+use std::{cmp::Ordering, fs, io::Cursor, thread};
 
+use base64::{prelude::BASE64_STANDARD, Engine};
 use bytes::Bytes;
-use eframe::egui::{self};
+use eframe::egui;
+use error::{error_message, Error};
 use req::{Files, Resource};
-use reqwest::{Client, Error};
+use reqwest::Client;
 use rodio::{Decoder, OutputStream, Sink};
 use tokio::sync::mpsc::{self, Receiver, Sender};
 
@@ -47,13 +50,13 @@ async fn main() -> Result<(), eframe::Error> {
                             .unwrap_or_default();
                     }
                 }
-                Ok::<(), reqwest::Error>(())
+                Ok::<(), Error>(())
             }
             .await;
             if let Err(err) = thread {
                 send_ui
                     .clone()
-                    .send(SenderTypeUi::Error(err.without_url()))
+                    .send(SenderTypeUi::Error(err))
                     .await
                     .unwrap_or_default();
             }
@@ -85,6 +88,7 @@ async fn main() -> Result<(), eframe::Error> {
                 send_server,
                 rec_ui,
                 error_modal: None,
+                add_modal: None,
                 audio_settings: AudioSettings::default(),
             })
         }),
@@ -99,8 +103,9 @@ struct App {
     // sender
     send_server: Sender<SenderTypeServer>,
     rec_ui: Receiver<SenderTypeUi>,
-    // error
+    // modals
     error_modal: Option<Error>,
+    add_modal: Option<Files>,
     // settings
     audio_settings: AudioSettings,
 }
@@ -143,20 +148,7 @@ impl eframe::App for App {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
         egui::TopBottomPanel::top("top").show(ctx, |ui| {
             ui.with_layout(egui::Layout::left_to_right(egui::Align::Center), |ui| {
-                if ui
-                    .selectable_value(&mut self.selected_tab, AppTabs::Sounds, "Sounds")
-                    .on_hover_ui(|ui| {
-                        ui.label("Reloads current data on press");
-                    })
-                    .clicked()
-                {
-                    let tx = self.send_server.clone();
-                    tokio::spawn(async move {
-                        tx.send(SenderTypeServer::GetResources)
-                            .await
-                            .unwrap_or_default();
-                    });
-                }
+                ui.selectable_value(&mut self.selected_tab, AppTabs::Sounds, "Sounds");
                 ui.selectable_value(&mut self.selected_tab, AppTabs::Settings, "Settings");
             });
         });
@@ -198,8 +190,12 @@ impl eframe::App for App {
                             .max_width(ui.available_width())
                             .anchor(egui::Align2::CENTER_CENTER, egui::Vec2::new(0.0, 0.0))
                             .show(ui.ctx(), |ui| {
-                                if let Some(error_message) = self.error_modal.as_ref() {
-                                    ui.label(format!("{}", error_message));
+                                if let Some(error) = self.error_modal.as_ref() {
+                                    let error_message = match error {
+                                        Error::Http(error) => format!("Http Error: {}", error),
+                                        Error::Custom(error) => error_message(error),
+                                    };
+                                    ui.label(error_message);
                                 }
                                 ui.with_layout(
                                     egui::Layout::right_to_left(egui::Align::TOP),
@@ -212,6 +208,81 @@ impl eframe::App for App {
                             });
                     }
 
+                    // add modal
+                    if self.add_modal.is_some() {
+                        egui::Window::new("Add")
+                            .title_bar(true)
+                            .collapsible(false)
+                            .resizable(false)
+                            .max_width(ui.available_width())
+                            .anchor(egui::Align2::CENTER_CENTER, egui::Vec2::new(0.0, 0.0))
+                            .show(ui.ctx(), |ui| {
+                                if let Some(files) = &mut self.add_modal {
+                                    ui.text_edit_singleline(&mut files.title);
+                                    ui.with_layout(
+                                        egui::Layout::right_to_left(egui::Align::Min)
+                                            .with_main_justify(true),
+                                        |ui| {
+                                            let title = if files.audio_data.is_empty() {
+                                                "Pick File"
+                                            } else {
+                                                "Picked"
+                                            };
+                                            if ui.button(title).clicked() {
+                                                if let Some(file) =
+                                                    rfd::FileDialog::new().pick_file()
+                                                {
+                                                    files.audio_data = BASE64_STANDARD
+                                                        .encode(fs::read(file).unwrap_or_default());
+                                                }
+                                            }
+                                        },
+                                    );
+                                }
+
+                                ui.with_layout(
+                                    egui::Layout::right_to_left(egui::Align::TOP),
+                                    |ui| {
+                                        if ui.button("Close").clicked() {
+                                            self.add_modal = None;
+                                        }
+                                        let files = self.add_modal.clone().unwrap_or_default();
+                                        ui.add_enabled_ui(
+                                            !files.title.is_empty() && !files.audio_data.is_empty(),
+                                            |ui| {
+                                                if ui.button("Add").clicked() {
+                                                    let tx = self.send_server.clone();
+                                                    let resources = self.resources.clone();
+                                                    tokio::spawn(async move {
+                                                        tx.send(SenderTypeServer::AddResource(
+                                                            resources, files,
+                                                        ))
+                                                        .await
+                                                        .unwrap_or_default();
+                                                    });
+                                                    self.add_modal = None;
+                                                }
+                                            },
+                                        );
+                                    },
+                                );
+                            });
+                    }
+
+                    ui.horizontal(|ui| {
+                        if ui.button("Reload").clicked() {
+                            let tx = self.send_server.clone();
+                            tokio::spawn(async move {
+                                tx.send(SenderTypeServer::GetResources)
+                                    .await
+                                    .unwrap_or_default();
+                            });
+                        }
+
+                        if ui.button("Add Clip").clicked() {
+                            self.add_modal = Some(Files::default());
+                        }
+                    });
                     ui.group(|ui| {
                         ui.set_width(ui.available_width());
                         ui.set_height(ui.available_height());

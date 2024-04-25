@@ -3,6 +3,8 @@ use std::path::PathBuf;
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 
+use crate::error::Error;
+
 const BASE_URL: &str = "http://127.0.0.1:5000";
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
@@ -13,14 +15,14 @@ pub struct Resource {
     pub time_stamp: u64,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Default, Clone, Serialize, Deserialize)]
 pub struct Files {
     pub title: String,
     pub audio_data: String,
 }
 
 /// Getting resources
-pub async fn get_resources(client: &reqwest::Client) -> Result<Vec<Resource>, reqwest::Error> {
+pub async fn get_resources(client: &reqwest::Client) -> Result<Vec<Resource>, Error> {
     let url = format!("{BASE_URL}/api/resource");
     let response = client.get(url).send().await?;
 
@@ -28,15 +30,12 @@ pub async fn get_resources(client: &reqwest::Client) -> Result<Vec<Resource>, re
         let json: Vec<Resource> = response.json().await?;
         Ok(json)
     } else {
-        Err(response.error_for_status().unwrap_err())
+        Err(response.text().await?.into())
     }
 }
 
 /// Add a resource
-pub async fn add_resource(
-    client: &reqwest::Client,
-    data: Files,
-) -> Result<Resource, reqwest::Error> {
+pub async fn add_resource(client: &reqwest::Client, data: Files) -> Result<Resource, Error> {
     let url = format!("{BASE_URL}/api/resource");
     let response = client
         .post(url)
@@ -48,14 +47,11 @@ pub async fn add_resource(
         let json: Resource = response.json().await?;
         Ok(json)
     } else {
-        Err(response.error_for_status().unwrap_err())
+        Err(response.text().await?.into())
     }
 }
 
-pub async fn download_file(
-    client: &reqwest::Client,
-    path: &str,
-) -> Result<bytes::Bytes, reqwest::Error> {
+pub async fn download_file(client: &reqwest::Client, path: &str) -> Result<bytes::Bytes, Error> {
     let url = format!("{BASE_URL}/{path}");
     let response = client.get(url).send().await?;
 
@@ -63,6 +59,6 @@ pub async fn download_file(
         let bytes = response.bytes().await?;
         Ok(bytes)
     } else {
-        Err(response.error_for_status().unwrap_err())
+        Err(response.text().await?.into())
     }
 }
