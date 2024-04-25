@@ -10,7 +10,6 @@ const BASE_URL: &str = "http://127.0.0.1:5000";
 pub struct Resource {
     pub title: String,
     pub audio_file: PathBuf,
-    pub picture_file: PathBuf,
     pub time_stamp: u64,
 }
 
@@ -18,7 +17,6 @@ pub struct Resource {
 pub struct Files {
     pub title: String,
     pub audio_data: String,
-    pub picture_data: String,
 }
 
 /// Getting resources

@@ -29,7 +29,7 @@ struct Args {
     /// Ip and port for the webserver
     host: SocketAddr,
     /// Directory for the static assets
-    #[arg(short, long, default_value = "web/build")]
+    #[arg(short, long, default_value = "../web/build")]
     assets: PathBuf,
     /// Path to where the files are getting saved
     #[arg(short, long, default_value = "files")]

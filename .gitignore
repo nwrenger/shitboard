@@ -1,10 +1,2 @@
 /.vscode
-/target
-Cargo.lock
 .DS_Store
-
-/files/*
-
-!/test/cert
-/test/cert/*
-!/test/cert/gen.sh

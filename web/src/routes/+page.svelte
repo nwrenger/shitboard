@@ -10,12 +10,10 @@
 	import { audio_interface } from '$lib/stores';
 	import { onMount } from 'svelte';
 	import { clamp, error_message } from '$lib/utils';
-	import ImageLoader from './ImageLoader.svelte';
 
 	interface Resource {
 		title: string;
 		audio_file: string;
-		picture_file: string;
 		time_stamp: number;
 	}
 
@@ -48,7 +46,11 @@
 			component: 'addModal',
 			// response
 			response: (r: Resource | undefined) => {
-				if (r) resources = [r, ...resources];
+				if (r) {
+					resources.push(r);
+					resources.sort((a: Resource, b: Resource) => b.time_stamp - a.time_stamp);
+					resources = resources;
+				}
 			}
 		};
 
@@ -70,6 +72,18 @@
 		});
 	}
 
+	function generateColor(timestamp: number) {
+		const str = timestamp.toString();
+		let hash = 0;
+		for (let i = 0; i < str.length; i++) {
+			const char = str.charCodeAt(i);
+			hash = (hash << 5) - hash + char;
+			hash = hash & hash;
+		}
+		const hue = Math.abs(hash % 360);
+		return `hsl(${hue}, 75%, 40%)`;
+	}
+
 	const popupHover: PopupSettings = {
 		event: 'hover',
 		placement: 'top',
@@ -87,9 +101,9 @@
 </svelte:head>
 
 <div class="container space-y-8 flex flex-col items-center !max-w-6xl mx-auto p-4">
-	<div class="grid sm:grid-cols-6 md:grid-cols-12 gap-4 grid-cols-4 w-full">
+	<div class="grid sm:grid-cols-6 md:grid-cols-12 gap-2 grid-cols-4 w-full">
 		<button
-			class="btn variant-filled-primary p-2 rounded-md max-w-16 [&>*]:pointer-events-none"
+			class="btn-icon variant-filled-primary p-2 rounded-md [&>*]:pointer-events-none"
 			on:click={create}
 			use:popup={{ ...popupHover, target: 'popupHover-plus' }}
 			><i class="fa-solid fa-plus"></i></button
@@ -100,16 +114,11 @@
 		</div>
 		{#each resources as resource, i}
 			<button
-				class="btn variant-filled p-2 rounded-md max-w-16 [&>*]:pointer-events-none"
+				class="btn-icon variant-filled p-2 rounded-md [&>*]:pointer-events-none"
 				on:click={() => playAudio(resource.audio_file)}
 				use:popup={{ ...popupHover, target: 'popupHover-' + i }}
 			>
-				<ImageLoader
-					src={resource.picture_file}
-					alt={resource.title.slice(0, 2)}
-					rounded="rounded-sm"
-					ratio="aspect-square"
-				/>
+				<i class="fa-solid fa-play" style="color: {generateColor(resource.time_stamp)}"></i>
 			</button>
 			<div class="card p-4 variant-filled" data-popup="popupHover-{i}">
 				<p>{resource.title}</p>

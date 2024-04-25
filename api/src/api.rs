@@ -16,7 +16,6 @@ use tokio::{fs, io::AsyncReadExt};
 struct Resource {
     title: String,
     audio_file: PathBuf,
-    picture_file: PathBuf,
     time_stamp: u64,
 }
 
@@ -24,7 +23,6 @@ struct Resource {
 struct Files {
     title: String,
     audio_data: String,
-    picture_data: String,
 }
 
 #[derive(Clone)]
@@ -71,12 +69,10 @@ async fn add_resource(
     Json(files): Json<Files>,
 ) -> Result<Json<Resource>> {
     let audio_data = BASE64_STANDARD.decode(files.audio_data)?;
-    let picture_data = BASE64_STANDARD.decode(files.picture_data)?;
 
     let (audio_ext, audio_mime) = infer_ext(&audio_data).unwrap_or_default();
-    let (picture_ext, picture_mime) = infer_ext(&picture_data).unwrap_or_default();
 
-    if !audio_mime.starts_with("audio/") || !picture_mime.starts_with("image/") {
+    if !audio_mime.starts_with("audio/") {
         return Err(Error::InvalidFileType);
     }
 
@@ -84,10 +80,6 @@ async fn add_resource(
         .resource_path
         .join(&files.title)
         .with_extension(&audio_ext);
-    let picture_file = project
-        .resource_path
-        .join(&files.title)
-        .with_extension(&picture_ext);
     let json_file = project
         .resource_path
         .join(&files.title)
@@ -97,7 +89,6 @@ async fn add_resource(
         let resource = Resource {
             title: files.title,
             audio_file: (&audio_file).into(),
-            picture_file: (&picture_file).into(),
             time_stamp: SystemTime::now()
                 .duration_since(UNIX_EPOCH)
                 .unwrap_or_default()
@@ -105,7 +96,6 @@ async fn add_resource(
         };
 
         fs::write(&audio_file, audio_data).await?;
-        fs::write(&picture_file, picture_data).await?;
         fs::write(&json_file, serde_json::to_string(&resource)?).await?;
 
         Ok(Json(resource))
