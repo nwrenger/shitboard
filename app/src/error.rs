@@ -26,7 +26,7 @@ pub fn error_message(error: &str) -> String {
         "InvalidFormat" => "Invalid file format",
         "NothingFound" => "No matching results",
         "Conversion" => "Conversion error, decoding, ...",
-        _ => "An unknown error has occurred.\nTry refreshing the page!",
+        _ => "An unknown error has occurred.\nTry reopening the app!",
     }
     .to_string()
 }
