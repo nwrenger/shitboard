@@ -101,10 +101,11 @@
 	}
 
 	function outSideClick(event: Event) {
-		event.preventDefault();
 		const target = event.target as HTMLElement;
 		if (!target.closest('#toaster')) {
 			dialogOpen = false;
+		} else {
+			event.preventDefault();
 		}
 	}
 
