@@ -27,7 +27,7 @@
 				<DropdownMenu.Content>
 					<DropdownMenu.Group>
 						<DropdownMenu.Label>
-							<a href="/" class="hover:underline">shitboard</a>
+							<a href="/" class="hover:underline" data-sveltekit-reload>shitboard</a>
 						</DropdownMenu.Label>
 						<DropdownMenu.Separator />
 						<DropdownMenu.Item href="https://github.com/nwrenger/shitboard" target="_blank">
