@@ -28,8 +28,8 @@ jobs:
       - name: Upload
         uses: actions/upload-artifact@v4
         with:
-          name: view
-          path: view/build
+          name: web
+          path: web/build
 
   build-rust:
     name: Build ${{ matrix.os }}
@@ -72,11 +72,11 @@ jobs:
         run: mkdir -p build
       - name: Add files directory
         run: mkdir build/files
-      - name: Download view
+      - name: Download web
         uses: actions/download-artifact@v4
         with:
-          name: view
-          path: build/view
+          name: web
+          path: build/web
       - name: Download server
         uses: actions/download-artifact@v4
         with:

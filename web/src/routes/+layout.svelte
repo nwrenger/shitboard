@@ -30,7 +30,7 @@
 							<div class="flex">
 								<span class="flex-auto font-bold">shitboard</span>
 								<a
-									class="anchor"
+									class="hover:underline"
 									href="https://github.com/nwrenger/shitboard"
 									target="_blank"
 									title="Repository"><ExternalLink size={16} stroke-width={2.5} /></a
@@ -38,8 +38,11 @@
 							</div>
 							<div class="flex">
 								<span class="flex-auto opacity-50">nwrenger</span>
-								<a class="anchor" href="https://github.com/nwrenger" target="_blank" title="Profile"
-									><ExternalLink size={16} stroke-width={2.5} /></a
+								<a
+									class="hover:underline"
+									href="https://github.com/nwrenger"
+									target="_blank"
+									title="Profile"><ExternalLink size={16} stroke-width={2.5} /></a
 								>
 							</div>
 						</div>

@@ -50,7 +50,7 @@ const config = {
 				}
 			},
 			backgroundImage: {
-				'gradient-conic': 'conic-gradient(at 50% -90%, var(--tw-gradient-stops))',
+				'gradient-conic': 'conic-gradient(at 50% -90%, var(--tw-gradient-stops))'
 			},
 			borderRadius: {
 				lg: 'var(--radius)',
