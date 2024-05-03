@@ -1,10 +1,10 @@
 <script>
 	import * as Avatar from '$lib/components/ui/avatar';
-	import * as Tooltip from '$lib/components/ui/tooltip';
+	import * as DropdownMenu from '$lib/components/ui/dropdown-menu';
 	import { Toaster } from '$lib/components/ui/sonner';
 	import '../app.pcss';
 	import { Button } from '$lib/components/ui/button';
-	import { ExternalLink, Moon, Sun } from 'lucide-svelte';
+	import { Moon, Sun, User, Github } from 'lucide-svelte';
 	import { ModeWatcher, toggleMode, mode } from 'mode-watcher';
 	import { Slider } from '$lib/components/ui/slider';
 	import { volume } from '$lib/stores';
@@ -17,40 +17,30 @@
 <div class="container h-14 max-w-6xl pl-2 pr-2 md:pl-4 md:pr-4">
 	<div class="flex h-[70px] items-center justify-between gap-3">
 		<div class="flex items-center gap-1.5">
-			<Tooltip.Root openDelay={0} closeOnPointerDown={false}>
-				<Tooltip.Trigger>
+			<DropdownMenu.Root>
+				<DropdownMenu.Trigger>
 					<Avatar.Root>
 						<Avatar.Image src="favicon.png" alt="shitboard" />
 						<Avatar.Fallback>SB</Avatar.Fallback>
 					</Avatar.Root>
-				</Tooltip.Trigger>
-				<Tooltip.Content>
-					<div class="space-y-4">
-						<div>
-							<div class="flex">
-								<span class="flex-auto font-bold">shitboard</span>
-								<a
-									class="hover:underline"
-									href="https://github.com/nwrenger/shitboard"
-									target="_blank"
-									title="Repository"><ExternalLink size={16} stroke-width={2.5} /></a
-								>
-							</div>
-							<div class="flex">
-								<span class="flex-auto opacity-50">nwrenger</span>
-								<a
-									class="hover:underline"
-									href="https://github.com/nwrenger"
-									target="_blank"
-									title="Profile"><ExternalLink size={16} stroke-width={2.5} /></a
-								>
-							</div>
-						</div>
-
-						<p>A Chaos-Fueled Soundboard App.</p>
-					</div>
-				</Tooltip.Content>
-			</Tooltip.Root>
+				</DropdownMenu.Trigger>
+				<DropdownMenu.Content>
+					<DropdownMenu.Group>
+						<DropdownMenu.Label>
+							<a href="/" class="hover:underline">shitboard</a>
+						</DropdownMenu.Label>
+						<DropdownMenu.Separator />
+						<DropdownMenu.Item href="https://github.com/nwrenger/shitboard" target="_blank">
+							<Github class="mr-2 h-4 w-4" />
+							<span>Github</span>
+						</DropdownMenu.Item>
+						<DropdownMenu.Item href="https://github.com/nwrenger" target="_blank">
+							<User class="mr-2 h-4 w-4" />
+							<span>Profile</span>
+						</DropdownMenu.Item>
+					</DropdownMenu.Group>
+				</DropdownMenu.Content>
+			</DropdownMenu.Root>
 		</div>
 		<div class="flex w-2/3 items-center justify-end md:w-1/2">
 			<Slider
