@@ -130,7 +130,7 @@
 					deletions!
 				</p>
 				<div class="grid gap-4 py-4">
-					<div class="grid grid-cols-4 items-center gap-4">
+					<div class="space-y-1">
 						<Label for="title" class="text-right">Title</Label>
 						<Input
 							bind:value={title}
@@ -139,7 +139,7 @@
 							class="col-span-3"
 						/>
 					</div>
-					<div class="grid grid-cols-4 items-center gap-4">
+					<div class="space-y-1">
 						<Label for="audio-clip" class="text-right">Audio Clip</Label>
 						<Input
 							on:change={(e) => readFile(e).then((data) => (audio_data = data))}

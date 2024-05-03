@@ -2,6 +2,11 @@
 @tailwind components;
 @tailwind utilities;
 
+html,
+body {
+	@apply h-full overflow-hidden;
+}
+
 @layer base {
 	:root {
 		--background: 0 0% 100%;
@@ -73,6 +78,6 @@
 		@apply border-border;
 	}
 	body {
-		@apply h-screen bg-gradient-conic from-sky-700 via-background to-purple-950 text-foreground;
+		@apply bg-gradient-conic from-sky-700 via-background to-purple-950 text-foreground;
 	}
 }
