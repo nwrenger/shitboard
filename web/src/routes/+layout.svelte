@@ -1,62 +1,74 @@
-<script lang="ts">
-	import '../app.postcss';
-	import '@fortawesome/fontawesome-free/css/all.css';
-
-	import {
-		AppShell,
-		type ModalComponent,
-		Modal,
-		Toast,
-		popup,
-		type PopupSettings
-	} from '@skeletonlabs/skeleton';
-	import { LightSwitch } from '@skeletonlabs/skeleton';
-	import AddModal from './AddModal.svelte';
-
-	// stores
-	import { initializeStores } from '@skeletonlabs/skeleton';
-	initializeStores();
-
-	import { computePosition, autoUpdate, offset, shift, flip, arrow } from '@floating-ui/dom';
-	import { storePopup } from '@skeletonlabs/skeleton';
-	import Popup from './Popup.svelte';
-	import ImageLoader from './ImageLoader.svelte';
-	storePopup.set({ computePosition, autoUpdate, offset, shift, flip, arrow });
-
-	const modalRegistry: Record<string, ModalComponent> = {
-		addModal: { ref: AddModal }
-	};
-
-	const popupShitboard: PopupSettings = {
-		event: 'click',
-		target: 'settingsContents',
-		placement: 'bottom',
-		closeQuery: ''
-	};
+<script>
+	import * as Avatar from '$lib/components/ui/avatar';
+	import * as Tooltip from '$lib/components/ui/tooltip';
+	import { Toaster } from '$lib/components/ui/sonner';
+	import '../app.pcss';
+	import { Button } from '$lib/components/ui/button';
+	import { ExternalLink, Moon, Sun } from 'lucide-svelte';
+	import { ModeWatcher, toggleMode, mode } from 'mode-watcher';
+	import { Slider } from '$lib/components/ui/slider';
+	import { volume } from '$lib/stores';
 </script>
 
-<Toast position="br" zIndex="z-[1000]" />
-<Modal components={modalRegistry} />
+<ModeWatcher />
 
-<!-- App Shell -->
-<AppShell>
-	<svelte:fragment slot="pageHeader">
-		<!-- Page Container -->
-		<div class="page-container !max-w-6xl mx-auto grid grid-cols-[1fr_auto] items-center gap-4 p-4">
-			<button type="button" class="btn-icon" use:popup={popupShitboard} title="shitboard">
-				<ImageLoader src="/favicon.png" alt="shit" rounded="rounded-sm" />
-			</button>
+<Toaster id="toaster" theme={$mode} class={'z-[100]'} />
 
-			<div class="card p-4 w-72 shadow-xl z-[2]" data-popup="settingsContents">
-				<Popup />
-			</div>
+<div class="container h-14 max-w-6xl pl-2 pr-2 md:pl-4 md:pr-4">
+	<div class="flex h-[70px] items-center justify-between gap-3">
+		<div class="flex items-center gap-1.5">
+			<Tooltip.Root openDelay={0} closeOnPointerDown={false}>
+				<Tooltip.Trigger>
+					<Avatar.Root>
+						<Avatar.Image src="favicon.png" alt="shitboard" />
+						<Avatar.Fallback>SB</Avatar.Fallback>
+					</Avatar.Root>
+				</Tooltip.Trigger>
+				<Tooltip.Content>
+					<div class="space-y-4">
+						<div>
+							<div class="flex">
+								<span class="flex-auto font-bold">shitboard</span>
+								<a
+									class="anchor"
+									href="https://github.com/nwrenger/shitboard"
+									target="_blank"
+									title="Repository"><ExternalLink size={16} stroke-width={2.5} /></a
+								>
+							</div>
+							<div class="flex">
+								<span class="flex-auto opacity-50">nwrenger</span>
+								<a class="anchor" href="https://github.com/nwrenger" target="_blank" title="Profile"
+									><ExternalLink size={16} stroke-width={2.5} /></a
+								>
+							</div>
+						</div>
 
-			<LightSwitch
-				class="bg-surface-50/50 dark:bg-surface-900/50 backdrop-blur-xl shadow-xl"
-				ring="ring-none"
-			/>
+						<p>A Chaos-Fueled Soundboard App.</p>
+					</div>
+				</Tooltip.Content>
+			</Tooltip.Root>
 		</div>
-	</svelte:fragment>
-	<!-- Page Route Content -->
-	<slot />
-</AppShell>
+		<div class="flex w-2/3 items-center justify-end md:w-1/2">
+			<Slider
+				bind:value={$volume}
+				max={1.0}
+				min={0.0}
+				step={0.01}
+				class="mr-4 w-9/12 md:w-2/3 xl:w-1/3"
+			/>
+
+			<Button on:click={toggleMode} variant="outline" size="icon">
+				<Sun
+					class="h-[1.2rem] w-[1.2rem] rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0"
+				/>
+				<Moon
+					class="absolute h-[1.2rem] w-[1.2rem] rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100"
+				/>
+				<span class="sr-only">Toggle theme</span>
+			</Button>
+		</div>
+	</div>
+</div>
+
+<slot />

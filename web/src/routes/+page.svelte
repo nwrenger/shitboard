@@ -1,28 +1,20 @@
 <script lang="ts">
-	import {
-		getModalStore,
-		popup,
-		type ModalSettings,
-		type PopupSettings,
-		type ToastSettings,
-		getToastStore
-	} from '@skeletonlabs/skeleton';
-	import { audio_interface } from '$lib/stores';
+	import { error_message, type Resource } from '$lib';
+	import { Button } from '$lib/components/ui/button';
+	import * as Tooltip from '$lib/components/ui/tooltip';
+	import { Pause, Play } from 'lucide-svelte';
 	import { onMount } from 'svelte';
-	import { clamp, error_message } from '$lib/utils';
+	import { toast } from 'svelte-sonner';
+	import AddDialog from './AddDialog.svelte';
+	import { volume } from '$lib/stores';
 
-	interface Resource {
-		title: string;
-		audio_file: string;
-		time_stamp: number;
-	}
-
-	const toastStore = getToastStore();
-	const modalStore = getModalStore();
-
+	let audio: HTMLAudioElement;
 	let resources: Resource[] = [];
+	let currentAudio: string | undefined;
 
-	// get initial data
+	$: if (audio) audio.volume = $volume[0];
+
+	// get initial data && state
 	onMount(async () => {
 		let response = await fetch('/api/resource', {
 			method: 'GET'
@@ -32,98 +24,72 @@
 				(a: Resource, b: Resource) => b.time_stamp - a.time_stamp
 			);
 		} else {
-			const t: ToastSettings = {
-				message: error_message(await response.text()),
-				background: 'variant-filled-error'
-			};
-			toastStore.trigger(t);
+			toast.error(error_message(await response.text()), {
+				duration: 5000,
+				important: true,
+				action: {
+					label: 'Close',
+					onClick: () => {}
+				}
+			});
 		}
 	});
 
-	function create() {
-		const modal: ModalSettings = {
-			type: 'component',
-			component: 'addModal',
-			// response
-			response: (r: Resource | undefined) => {
-				if (r) {
-					resources.push(r);
-					resources.sort((a: Resource, b: Resource) => b.time_stamp - a.time_stamp);
-					resources = resources;
-				}
-			}
-		};
+	function generateColor(time_stamp: number) {
+		let red = (time_stamp & 0xff0000) >> 16;
+		let green = (time_stamp & 0x00ff00) >> 8;
+		let blue = time_stamp & 0x0000ff;
 
-		modalStore.trigger(modal);
+		return `#${red.toString(16).padStart(2, '0')}${green.toString(16).padStart(2, '0')}${blue.toString(16).padStart(2, '0')}`;
 	}
-
-	async function playAudio(path: string) {
-		const audio = new Audio(path);
-		audio.volume =
-			$audio_interface.volume !== 0
-				? clamp(0.01 * Math.exp(Math.log(1.0 / 0.01) * $audio_interface.volume), 0.01, 1.0)
-				: 0.0;
-		audio.play().catch((error) => {
-			const t: ToastSettings = {
-				message: 'Error playing audio: ' + error,
-				background: 'variant-filled-error'
-			};
-			toastStore.trigger(t);
-		});
-	}
-
-	function generateColor(timestamp: number) {
-		const str = timestamp.toString();
-		let hash = 0;
-		for (let i = 0; i < str.length; i++) {
-			const char = str.charCodeAt(i);
-			hash = (hash << 5) - hash + char;
-			hash = hash & hash;
-		}
-		const hue = Math.abs(hash % 360);
-		return `hsl(${hue}, 75%, 40%)`;
-	}
-
-	const popupHover: PopupSettings = {
-		event: 'hover',
-		placement: 'top',
-		target: ''
-	};
 </script>
 
-<svelte:head>
-	<title>shitboard</title>
-	<meta
-		name="description"
-		content="A Chaos-Fueled Soundboard App where creativity and permanence collide. Unleash your sounds
-	into the wild with no take-backs. Upload anything; once it's up, it's there forever!"
-	/>
-</svelte:head>
-
-<div class="container space-y-8 flex flex-col items-center !max-w-6xl mx-auto p-4">
-	<div class="grid sm:grid-cols-6 md:grid-cols-12 gap-2 grid-cols-4 w-full">
-		<button
-			class="btn-icon variant-filled-primary p-2 rounded-md [&>*]:pointer-events-none"
-			on:click={create}
-			use:popup={{ ...popupHover, target: 'popupHover-plus' }}
-			><i class="fa-solid fa-plus"></i></button
-		>
-		<div class="card p-4 variant-filled-primary" data-popup="popupHover-plus">
-			<p>Add here new Sounds!</p>
-			<div class="arrow variant-filled-primary" />
-		</div>
-		{#each resources as resource, i}
-			<button
-				class="btn-icon variant-filled p-2 rounded-md [&>*]:pointer-events-none"
-				on:click={() => playAudio(resource.audio_file)}
-				use:popup={{ ...popupHover, target: 'popupHover-' + i }}
-			>
-				<i class="fa-solid fa-play" style="color: {generateColor(resource.time_stamp)}"></i>
-			</button>
-			<div class="card p-4 variant-filled" data-popup="popupHover-{i}">
-				<p>{resource.title}</p>
-				<div class="arrow variant-filled" />
-			</div>
+<div class="container mx-auto flex max-w-6xl flex-col items-center space-y-8 p-4">
+	<div class="grid w-full grid-cols-4 gap-4 sm:grid-cols-6 md:grid-cols-12">
+		<Tooltip.Root openDelay={0}>
+			<Tooltip.Trigger asChild let:builder={tooltip}>
+				<AddDialog bind:resources {tooltip} />
+			</Tooltip.Trigger>
+			<Tooltip.Content>
+				<p>Add new Sound</p>
+			</Tooltip.Content>
+		</Tooltip.Root>
+		{#each resources as resource}
+			<Tooltip.Root openDelay={0} closeOnPointerDown={false}>
+				<Tooltip.Trigger asChild let:builder>
+					<Button
+						builders={[builder]}
+						size="icon"
+						variant="outline"
+						on:click={() => {
+							if (currentAudio == resource.audio_file) {
+								currentAudio = undefined;
+							} else {
+								currentAudio = resource.audio_file;
+							}
+						}}
+					>
+						{#if currentAudio == resource.audio_file}
+							<Pause size={20} color={generateColor(resource.time_stamp)} />
+						{:else}
+							<Play size={20} color={generateColor(resource.time_stamp)} />
+						{/if}
+					</Button>
+				</Tooltip.Trigger>
+				<Tooltip.Content>
+					<p>{resource.title}</p>
+				</Tooltip.Content>
+			</Tooltip.Root>
 		{/each}
 	</div>
+	{#if currentAudio}
+		<audio
+			bind:this={audio}
+			autoplay
+			src={currentAudio}
+			on:ended={() => (currentAudio = undefined)}
+		>
+			<source src={currentAudio} />
+		</audio>
+	{/if}
 </div>
