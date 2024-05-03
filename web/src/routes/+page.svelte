@@ -44,6 +44,14 @@
 	}
 </script>
 
+<svelte:head>
+	<title>shitboard</title>
+	<meta
+		name="description"
+		content=" A Chaos-Fueled Soundboard App where creativity and permanence collide."
+	/>
+</svelte:head>
+
 <div class="container mx-auto flex max-w-6xl flex-col items-center space-y-8 p-4">
 	<div class="grid w-full grid-cols-4 gap-4 sm:grid-cols-6 md:grid-cols-12">
 		<Tooltip.Root openDelay={0}>
