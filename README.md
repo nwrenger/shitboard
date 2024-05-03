@@ -8,7 +8,8 @@ A Chaos-Fueled Soundboard App where creativity and permanence collide. Unleash y
 > Done
 
 ### app
-- Add virtual mic with own mic input for fooling others in online calls
+- Add tauri integration
+- Mic integration
 
 ### web
-- Add App tab, for showing theres is now a more comprehensive app
+- Add Point for showing theres is now a more comprehensive app
