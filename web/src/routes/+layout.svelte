@@ -14,7 +14,7 @@
 
 <Toaster id="toaster" theme={$mode} class={'z-[100]'} />
 <header
-	class="border-border/40 bg-background/95 supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50 w-full border-b backdrop-blur"
+	class="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60"
 >
 	<div class="container max-w-6xl pl-4 pr-4">
 		<div class="flex h-[70px] items-center justify-between gap-3">
