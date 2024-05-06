@@ -52,52 +52,45 @@
 	/>
 </svelte:head>
 
-<div class="container mx-auto flex max-w-6xl flex-col items-center space-y-8 p-4">
-	<div class="grid w-full grid-cols-4 gap-4 sm:grid-cols-6 md:grid-cols-12">
-		<Tooltip.Root openDelay={0}>
-			<Tooltip.Trigger asChild let:builder={tooltip}>
-				<AddDialog bind:resources {tooltip} />
+<div class="grid w-full grid-cols-4 gap-4 sm:grid-cols-6 md:grid-cols-12">
+	<Tooltip.Root openDelay={0}>
+		<Tooltip.Trigger asChild let:builder={tooltip}>
+			<AddDialog bind:resources {tooltip} />
+		</Tooltip.Trigger>
+		<Tooltip.Content>
+			<p>Add new Sound</p>
+		</Tooltip.Content>
+	</Tooltip.Root>
+	{#each resources as resource}
+		<Tooltip.Root openDelay={0} closeOnPointerDown={false}>
+			<Tooltip.Trigger asChild let:builder>
+				<Button
+					builders={[builder]}
+					size="icon"
+					variant="outline"
+					on:click={() => {
+						if (currentAudio == resource.audio_file) {
+							currentAudio = undefined;
+						} else {
+							currentAudio = resource.audio_file;
+						}
+					}}
+				>
+					{#if currentAudio == resource.audio_file}
+						<Pause size={20} color={generateColor(resource.time_stamp)} />
+					{:else}
+						<Play size={20} color={generateColor(resource.time_stamp)} />
+					{/if}
+				</Button>
 			</Tooltip.Trigger>
 			<Tooltip.Content>
-				<p>Add new Sound</p>
+				<p>{resource.title}</p>
 			</Tooltip.Content>
 		</Tooltip.Root>
-		{#each resources as resource}
-			<Tooltip.Root openDelay={0} closeOnPointerDown={false}>
-				<Tooltip.Trigger asChild let:builder>
-					<Button
-						builders={[builder]}
-						size="icon"
-						variant="outline"
-						on:click={() => {
-							if (currentAudio == resource.audio_file) {
-								currentAudio = undefined;
-							} else {
-								currentAudio = resource.audio_file;
-							}
-						}}
-					>
-						{#if currentAudio == resource.audio_file}
-							<Pause size={20} color={generateColor(resource.time_stamp)} />
-						{:else}
-							<Play size={20} color={generateColor(resource.time_stamp)} />
-						{/if}
-					</Button>
-				</Tooltip.Trigger>
-				<Tooltip.Content>
-					<p>{resource.title}</p>
-				</Tooltip.Content>
-			</Tooltip.Root>
-		{/each}
-	</div>
-	{#if currentAudio}
-		<audio
-			bind:this={audio}
-			autoplay
-			src={currentAudio}
-			on:ended={() => (currentAudio = undefined)}
-		>
-			<source src={currentAudio} />
-		</audio>
-	{/if}
+	{/each}
 </div>
+{#if currentAudio}
+	<audio bind:this={audio} autoplay src={currentAudio} on:ended={() => (currentAudio = undefined)}>
+		<source src={currentAudio} />
+	</audio>
+{/if}

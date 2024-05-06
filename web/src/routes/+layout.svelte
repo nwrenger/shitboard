@@ -67,4 +67,6 @@
 	</div>
 </header>
 
-<slot />
+<div class="container mx-auto flex max-w-6xl flex-col items-center space-y-8 p-4">
+	<slot />
+</div>
