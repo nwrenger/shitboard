@@ -10,7 +10,7 @@
 	import { volume } from '$lib/stores';
 </script>
 
-<ModeWatcher />
+<ModeWatcher disableTransitions={false} />
 
 <Toaster id="toaster" theme={$mode} class={'z-[100]'} />
 <header
