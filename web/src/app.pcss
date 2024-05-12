@@ -2,11 +2,6 @@
 @tailwind components;
 @tailwind utilities;
 
-html,
-body {
-	@apply h-full overflow-hidden;
-}
-
 @layer base {
 	:root {
 		--background: 0 0% 100%;
@@ -74,6 +69,10 @@ body {
 }
 
 @layer base {
+	html,
+	body {
+		@apply h-full overflow-hidden;
+	}
 	* {
 		@apply border-border;
 	}
