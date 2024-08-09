@@ -1,37 +1,26 @@
 <script lang="ts">
-	import { error_message, type Resource } from '$lib';
+	import { showError, isError } from '$lib';
 	import { Button } from '$lib/components/ui/button';
 	import * as Tooltip from '$lib/components/ui/tooltip';
 	import { Pause, Play } from 'lucide-svelte';
 	import { onMount } from 'svelte';
-	import { toast } from 'svelte-sonner';
 	import AddDialog from './AddDialog.svelte';
 	import { volume } from '$lib/stores';
+	import api from '$lib/api';
 
 	let audio: HTMLAudioElement;
-	let resources: Resource[] = [];
+	let resources: api.Resource[] = [];
 	let currentAudio: string | undefined;
 
 	$: if (audio) audio.volume = $volume[0];
 
 	// get initial data && state
 	onMount(async () => {
-		let response = await fetch('/api/resource', {
-			method: 'GET'
-		});
-		if (response.ok) {
-			resources = (await response.json()).sort(
-				(a: Resource, b: Resource) => b.time_stamp - a.time_stamp
-			);
+		let response = await api.resources();
+		if (!isError(response)) {
+			resources = response.sort((a: api.Resource, b: api.Resource) => b.time_stamp - a.time_stamp);
 		} else {
-			toast.error(error_message(await response.text()), {
-				duration: 5000,
-				important: true,
-				action: {
-					label: 'Close',
-					onClick: () => {}
-				}
-			});
+			showError(response);
 		}
 	});
 

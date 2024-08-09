@@ -1,26 +1,39 @@
-export interface Resource {
-	title: string;
-	audio_file: string;
-	time_stamp: number;
+import { toast } from 'svelte-sonner';
+import api from './api';
+
+export function isError(result: any): result is api.Error {
+	const errors: string[] = Object.keys(api.Error);
+	return errors.includes(result);
 }
 
-export function error_message(error: string): string {
+export function showError(error: api.Error) {
+	toast.error(error_message(error), {
+		duration: 5000,
+		important: true,
+		action: {
+			label: 'Close',
+			onClick: () => {}
+		}
+	});
+}
+
+export function error_message(error: api.Error): string {
 	switch (error) {
-		case 'Arguments':
+		case api.Error.Arguments:
 			return 'The user provided arguments are malformed';
-		case 'FileOpen':
+		case api.Error.FileOpen:
 			return 'A file could not be found or opened';
-		case 'AlreadyExists':
+		case api.Error.AlreadyExists:
 			return 'A file with that name already exists';
-		case 'InvalidFileType':
+		case api.Error.InvalidFileType:
 			return 'An uploaded file has an invalid type';
-		case 'Network':
+		case api.Error.Network:
 			return 'Could not connect to server';
-		case 'InvalidFormat':
+		case api.Error.InvalidFormat:
 			return 'Invalid file format';
-		case 'NothingFound':
+		case api.Error.NothingFound:
 			return 'No matching results';
-		case 'Conversion':
+		case api.Error.Conversion:
 			return 'Conversion error, decoding, ...';
 		default:
 			return 'An unknown error has occurred.\nTry refreshing the page!';

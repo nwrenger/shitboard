@@ -5,11 +5,11 @@
 	import { Button } from '$lib/components/ui/button';
 	import { CircleAlert, LoaderCircle, Plus } from 'lucide-svelte';
 	import * as Alert from '$lib/components/ui/alert';
-	import { bufferToBase64, error_message, type Resource } from '$lib';
-	import { toast } from 'svelte-sonner';
+	import { bufferToBase64, showError, isError } from '$lib';
+	import api from '$lib/api';
 
 	export let tooltip;
-	export let resources: Resource[];
+	export let resources: api.Resource[];
 
 	const maxSize = 2_000_000;
 
@@ -24,50 +24,18 @@
 		audio_data = undefined;
 	}
 
-	function encodedData(audio_data: Uint8Array): string {
-		const audioDataEncoded = bufferToBase64(audio_data);
-
-		return JSON.stringify({
-			title,
-			audio_data: audioDataEncoded
-		});
-	}
-
 	async function add() {
-		try {
-			let body = encodedData(audio_data || new Uint8Array());
-			let response = await fetch('/api/resource', {
-				method: 'POST',
-				body,
-				headers: {
-					'Content-Type': 'application/json'
-				}
-			});
-			if (response.ok) {
-				let data = await response.json();
-				resources.push(data);
-				resources = resources.sort((a: Resource, b: Resource) => b.time_stamp - a.time_stamp);
-				// close dialog
-				dialogOpen = false;
-			} else {
-				toast.error(error_message(await response.text()), {
-					duration: 5000,
-					important: true,
-					action: {
-						label: 'Close',
-						onClick: () => {}
-					}
-				});
-			}
-		} catch (e) {
-			toast.error(e as string, {
-				duration: 5000,
-				important: true,
-				action: {
-					label: 'Close',
-					onClick: () => {}
-				}
-			});
+		let response = await api.add_resource({
+			title,
+			audio_data: bufferToBase64(audio_data || new Uint8Array())
+		});
+		if (!isError(response)) {
+			resources.push(response);
+			resources = resources.sort((a: api.Resource, b: api.Resource) => b.time_stamp - a.time_stamp);
+			// close dialog
+			dialogOpen = false;
+		} else {
+			showError(response);
 		}
 	}
 
@@ -109,7 +77,7 @@
 		}
 	}
 
-	$: tooBig = audio_data && encodedData(audio_data).length >= maxSize;
+	$: tooBig = audio_data && audio_data.length >= maxSize;
 	$: filled = title?.length > 0 && (audio_data?.length || 0) > 0;
 	$: valid = !tooBig && filled;
 </script>

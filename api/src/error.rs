@@ -1,7 +1,8 @@
 use std::fmt;
 
-use axum::response::IntoResponse;
+use axum::{response::IntoResponse, Json};
 use base64::DecodeError;
+use gluer::metadata;
 use hyper::StatusCode;
 use serde::Serialize;
 use tracing::error;
@@ -10,6 +11,7 @@ use tracing::error;
 ///
 /// More specific error messages are removed to be api compatible.
 /// Those messages are logged however.
+#[metadata]
 #[repr(i64)]
 #[derive(Debug, Clone, Copy, Serialize)]
 pub enum Error {
@@ -87,9 +89,10 @@ impl IntoResponse for Error {
             Error::FileOpen | Error::NothingFound => StatusCode::NOT_FOUND,
             Error::Network => StatusCode::SERVICE_UNAVAILABLE,
         };
-        (status, self.to_string()).into_response()
+        (status, Json(self)).into_response()
     }
 }
 
 /// Result type using the api error.
+#[metadata]
 pub type Result<T> = std::result::Result<T, Error>;
