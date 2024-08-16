@@ -1,4 +1,4 @@
-const BASE = '/api';
+const PREFIX = '/api';
 
 namespace api {
     export interface Files {
@@ -22,35 +22,35 @@ namespace api {
         /**
             The user provided arguments are malformed
         */
-        Arguments = 'Arguments',
+        Arguments = "Arguments",
         /**
             A file could not be found or opened
         */
-        FileOpen = 'FileOpen',
+        FileOpen = "FileOpen",
         /**
             A file with that name already exists
         */
-        AlreadyExists = 'AlreadyExists',
+        AlreadyExists = "AlreadyExists",
         /**
             An uploaded file has an invalid type
         */
-        InvalidFileType = 'InvalidFileType',
+        InvalidFileType = "InvalidFileType",
         /**
             Could not connect to server
         */
-        Network = 'Network',
+        Network = "Network",
         /**
             Invalid file format
         */
-        InvalidFormat = 'InvalidFormat',
+        InvalidFormat = "InvalidFormat",
         /**
             No matching results
         */
-        NothingFound = 'NothingFound',
+        NothingFound = "NothingFound",
         /**
             Conversion error, decoding, ...
         */
-        Conversion = 'Conversion'
+        Conversion = "Conversion",
     }
 
     /**
@@ -61,35 +61,28 @@ namespace api {
     async function fetch_api(endpoint: string, options: RequestInit): Promise<any> {
         const response = await fetch(endpoint, {
             headers: {
-                'Content-Type': 'application/json',
-                ...options.headers
+                "Content-Type": "application/json",
+                ...options.headers,
             },
-            ...options
+            ...options,
         });
-        return response.json();
-    }
-
-    function query_str(params: Record<string, any>): string {
-        if (params) {
-            let data: Record<string, string> = {};
-            for (let key in params) {
-                if (params[key] != null) data[key] = params[key].toString();
-            }
-            return '?' + new URLSearchParams(data).toString();
-        }
-        return '';
+        if (response.headers.get('Content-Length') === '0') {
+			return;
+		} else {
+			return response.json();
+		}
     }
 
     export async function add_resource(data: Files): Promise<Result<Resource>> {
-        return fetch_api(`${BASE}/resource`, {
-            method: 'POST',
+        return fetch_api(`${PREFIX}/resource`, {
+            method: "POST", 
             body: JSON.stringify(data)
         });
     }
 
     export async function resources(): Promise<Result<Resource[]>> {
-        return fetch_api(`${BASE}/resource`, {
-            method: 'GET'
+        return fetch_api(`${PREFIX}/resource`, {
+            method: "GET", 
         });
     }
 }

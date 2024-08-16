@@ -7,8 +7,8 @@ use std::{
 };
 
 use crate::error::{Error, Result};
-use axum::{extract::State, routing::get, Json, Router};
-use gluer::{generate, metadata, route};
+use axum::{extract::State, Json, Router};
+use gluer::{generate, metadata};
 use serde::{Deserialize, Serialize};
 use tokio::{fs, io::AsyncReadExt};
 
@@ -43,13 +43,15 @@ impl Project {
 }
 
 pub fn routes(state: Project) -> Router {
-    let mut api = Router::new();
-
-    route!(api, "/resource", get(resources).post(add_resource));
-
-    generate!("src/", "../web/src/lib/api.ts", "/api");
-
-    api.with_state(state)
+    generate! {
+        prefix = "/api",
+        routes = {
+            "/resource" = get(resources).post(add_resource)
+        },
+        files = ["src/api.rs", "src/error.rs"],
+        output = "../web/src/lib/api.ts"
+    }
+    .with_state(state)
 }
 
 #[metadata(custom = [Result])]
