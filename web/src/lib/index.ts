@@ -1,21 +1,21 @@
 import { toast } from 'svelte-sonner';
 import api from './api';
 
-export function handleResult<T>(result: api.Result<T>, predicate: (out: T) => void) {
-    if (isError(result)) {
-        showError(result);
+export function handle_result<T>(result: api.Result<T>): T | never {
+    if (is_error(result)) {
+        return show_error(result);
     } else {
-        predicate(result);
+        return result;
     }
 }
 
-export function isError(result: any): result is api.Error {
+export function is_error(result: any): result is api.Error {
     const errors: string[] = Object.keys(api.Error);
     return errors.includes(result);
 }
 
-export function showError(error: api.Error) {
-    toast.error(errorMessage(error), {
+export function show_error(error: api.Error): never {
+    toast.error(error_message(error), {
         duration: 5000,
         important: true,
         action: {
@@ -23,9 +23,11 @@ export function showError(error: api.Error) {
             onClick: () => {}
         }
     });
+
+    throw error;
 }
 
-export function errorMessage(error: api.Error): string {
+export function error_message(error: api.Error): string {
     switch (error) {
         case api.Error.Arguments:
             return 'The user provided arguments are malformed';

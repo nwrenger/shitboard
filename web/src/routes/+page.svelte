@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { handleResult } from '$lib';
+    import { handle_result } from '$lib';
     import { Button } from '$lib/components/ui/button';
     import * as Tooltip from '$lib/components/ui/tooltip';
     import { Pause, Play } from 'lucide-svelte';
@@ -16,9 +16,9 @@
 
     // get initial data && state
     onMount(async () => {
-		handleResult(await api.resources(), (res) => {
-            resources = res.sort((a: api.Resource, b: api.Resource) => b.time_stamp - a.time_stamp);
-        });
+        resources = handle_result(await api.resources()).sort(
+            (a: api.Resource, b: api.Resource) => b.time_stamp - a.time_stamp
+        );
     });
 
     function generateColor(time_stamp: number) {

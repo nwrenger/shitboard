@@ -5,7 +5,7 @@
     import { Button } from '$lib/components/ui/button';
     import { CircleAlert, LoaderCircle, Plus } from 'lucide-svelte';
     import * as Alert from '$lib/components/ui/alert';
-    import { bufferToBase64, handleResult } from '$lib';
+    import { bufferToBase64, handle_result } from '$lib';
     import api from '$lib/api';
 
     export let tooltip;
@@ -25,18 +25,18 @@
     }
 
     async function add() {
-        let response = await api.add_resource({
-            title,
-            audio_data: bufferToBase64(audio_data || new Uint8Array())
-        });
-        handleResult(response, (res) => {
-            resources.push(res);
-            resources = resources.sort(
-                (a: api.Resource, b: api.Resource) => b.time_stamp - a.time_stamp
-            );
-            // close dialog
-            dialogOpen = false;
-        });
+        let res = handle_result(
+            await api.add_resource({
+                title,
+                audio_data: bufferToBase64(audio_data || new Uint8Array())
+            })
+        );
+        resources.push(res);
+        resources = resources.sort(
+            (a: api.Resource, b: api.Resource) => b.time_stamp - a.time_stamp
+        );
+        // close dialog
+        dialogOpen = false;
     }
 
     function readFile(event: Event): Promise<Uint8Array> {
