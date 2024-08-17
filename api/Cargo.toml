@@ -16,7 +16,7 @@ axum = "0.7.4"
 base64 = "0.22.0"
 clap = { version = "4.5.3", features = ["derive"] }
 clap_derive = "4.5.3"
-gluer = "0.8.0"
+gluer = "0.8.1"
 hyper = "1.2.0"
 infer = "0.15.0"
 serde = { version = "1.0.197", features = ["serde_derive"] }

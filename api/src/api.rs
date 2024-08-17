@@ -7,7 +7,7 @@ use std::{
 };
 
 use crate::error::{Error, Result};
-use axum::{extract::State, Json, Router};
+use axum::{extract::State, routing::get, Json, Router};
 use gluer::{generate, metadata};
 use serde::{Deserialize, Serialize};
 use tokio::{fs, io::AsyncReadExt};
