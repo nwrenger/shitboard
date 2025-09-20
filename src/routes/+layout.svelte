@@ -100,7 +100,7 @@
 		</p>
 
 		<div class="flex flex-wrap items-center gap-4">
-			<a href="/privacy-policy" class="underline text-center">Privacy Policy</a>
+			<a href="https://nwrenger.dev/privacy-policy" class="underline text-center">Privacy Policy</a>
 		</div>
 	</div>
 </footer>
