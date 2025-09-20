@@ -10,6 +10,7 @@
 	import { GITHUB_URL } from '$lib';
 
 	let { children } = $props();
+	const year = new Date().getFullYear();
 </script>
 
 <ModeWatcher disableTransitions={false} />
@@ -84,6 +85,22 @@
 	</div>
 </header>
 
-<div class="container mx-auto flex max-w-6xl flex-col items-center space-y-8 p-4">
+<div
+	class="container mx-auto h-[calc(100%-140px)] overflow-y-scroll flex max-w-6xl flex-col items-center space-y-8 p-4"
+>
 	{@render children()}
 </div>
+
+<footer
+	class="border-t border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60"
+>
+	<div class="mx-auto flex max-w-6xl flex-row items-center justify-between gap-3 px-4 py-6 text-sm">
+		<p class="text-center text-xs sm:text-sm">
+			<span class="opacity-80">© {year}</span> · <span class="font-medium">Nils Wrenger</span>
+		</p>
+
+		<div class="flex flex-wrap items-center gap-4">
+			<a href="/privacy-policy" class="underline text-center">Privacy Policy</a>
+		</div>
+	</div>
+</footer>
